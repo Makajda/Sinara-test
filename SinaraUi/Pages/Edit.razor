@@ -1,0 +1,104 @@
+﻿@page "/Edit/{Id:int?}"
+@page "/Remove/{Id:int?}"
+@using System.Text.RegularExpressions;
+@inject NavigationManager navigationManager
+@inject HrClient client
+
+<PageTitle>Тестовое задание Синара Программист C#</PageTitle>
+
+<h2>@title</h2>
+
+<p><em>@error</em></p
+
+@if (customer is null) {
+    <p><em>Ждите...</em></p>
+}
+else {
+    <div class="container">
+        <table>
+            <tr><td>
+                <input class="input" readonly="@isRemove" value="@customer.LastName" @oninput="n=>customer.LastName=n.Value?.ToString()" placeholder="Фамилия..." type="text">
+            </td></tr>
+            <tr><td>
+                <input class="input" readonly="@isRemove" value="@customer.FirstName" @oninput="n=>customer.FirstName=n.Value?.ToString()" placeholder="Имя..." type="text">
+            </td></tr>
+            <tr><td>
+                <input class="input" readonly="@isRemove" value="@customer.Surname" @oninput="n=>customer.Surname=n.Value?.ToString()" placeholder="Отчество..." type="text">
+            </td></tr>
+            <tr><td>
+                <input class="input" readonly="@isRemove" value="@customer.Login" @oninput="n=>customer.Login=n.Value?.ToString()" placeholder="Домен\Логин..." type="text">
+            </td></tr>
+        </table>
+    
+        <button class="btn btn-primary" hidden="@isRemove" @onclick="()=>Save()">Сохранить</button>
+        <button class="btn btn-primary" hidden="@(!isRemove)" @onclick="()=>Remove()">Удалить</button>
+        <button class="btn btn-info" @onclick="()=>Cancel()">Отмена</button>
+    
+        <p>@errorLogin</p>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    string? error;
+    string? errorLogin;
+    string? title;
+    bool isRemove;
+    Customer customer = new Customer();
+
+    protected override async Task OnParametersSetAsync() {
+        isRemove = navigationManager.Uri.Contains("/Remove/");
+        try {
+            if(Id == 0) {
+                title = "Добавление пользователя";
+            }
+            else {
+                title = $"{(isRemove ? "Удаление" : "Правка")} пользователя";
+                customer = await client.Get(Id);
+            }
+        }
+        catch (Exception ex) {
+            error = ex.Message;
+        }
+    }
+
+    void Cancel() => navigationManager.NavigateTo("/");
+
+    async Task Save() {
+        //проверка логина
+        if(string.IsNullOrWhiteSpace(customer.Login))
+            errorLogin = $"Не введён Login";
+        else if (!Regex.IsMatch(customer.Login, @"^\w+[\\]\w+$"))
+            errorLogin = $"Login {customer.Login} имеет неправильный формат";
+        else {
+            try {
+                var resultOfValidation = await client.Validation(customer.Login);
+                if (resultOfValidation) {
+                    //сохранение
+                    if (Id == 0)
+                        await client.Add(customer);
+                    else
+                        await client.Update(customer);
+
+                    navigationManager.NavigateTo("/");
+                }
+                else
+                    errorLogin = $"Login {customer.Login} отсутствует в Active Directory";
+            }
+            catch (Exception ex) {
+                error = ex.Message;
+            }
+        }
+    }
+
+    async Task Remove() {
+        try {
+            await client.Delete(Id);
+            navigationManager.NavigateTo("/");
+        }
+        catch (Exception ex) {
+            error = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,60 @@
+﻿@page "/"
+@inject NavigationManager navigationManager
+@inject HrClient client
+
+<PageTitle>Тестовое задание Синара Программист C#</PageTitle>
+
+<p><em>@error</em></p
+
+@if (customers is null) {
+    <p><em>Ждите...</em></p>
+}
+else {
+    <button class="btn btn-primary" @onclick="()=>Add()">Добавить пользователя</button>
+    <hr />
+    if (customers.Count == 0) {
+        <h3>Нет ни одного пользователя</h3>
+    }
+    else {
+        <table class="table">
+            <thead>
+                <tr>
+                  <th>Фамилия</th>
+                  <th>Имя</th>
+                  <th>Отчество</th>
+                  <th>Логин</th>
+                  <th></th>
+                  <th></th>
+                </tr>
+            </thead>
+            @foreach (var customer in customers) {
+                <tr>
+                    <td>@customer.LastName</td>
+                    <td>@customer.FirstName</td>
+                    <td>@customer.Surname</td>
+                    <td>@customer.Login</td>
+                    <td><button class="btn btn-info" @onclick="()=>Edit(customer.Id)">Правка</button></td>
+                    <td><button class="btn btn-info" @onclick="()=>Remove(customer.Id)">Удаление</button></td>
+                </tr>
+            }
+        </table>
+    }
+}
+
+@code {
+    string? error;
+    List<Customer>? customers;
+
+    protected override async Task OnInitializedAsync() {
+        try {
+            customers = await client.Gets();
+        }
+        catch (Exception ex) {
+            error = ex.Message;
+        }
+    }
+
+    void Add() => navigationManager.NavigateTo("Edit");
+    void Edit(int id) => navigationManager.NavigateTo($"Edit/{id}");
+    void Remove(int id) => navigationManager.NavigateTo($"Remove/{id}");
+}
