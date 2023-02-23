@@ -7,7 +7,7 @@ builder.Services.AddControllers().AddJsonOptions(options => {
     options.JsonSerializerOptions.WriteIndented = true;
 });
 builder.Services.AddDbContext<HrDbContext>();
-builder.Services.AddScoped<DirectoryEntryService>();
+builder.Services.AddScoped<IDirectoryEntryService, DirectoryEntryService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

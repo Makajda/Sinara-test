@@ -1,15 +1,13 @@
-using SinaraLib.Models;
-
 namespace SinaraApi.Controllers;
 
 [ApiController]
 [Route("[controller]")]
 public class CustomerController : ControllerBase {
     private readonly HrDbContext db;
-    private readonly DirectoryEntryService directoryEntryService;
+    private readonly IDirectoryEntryService directoryEntryService;
     private readonly ILogger<CustomerController> logger;
 
-    public CustomerController(HrDbContext db, DirectoryEntryService directoryEntryService, ILogger<CustomerController> logger) {
+    public CustomerController(HrDbContext db, IDirectoryEntryService directoryEntryService, ILogger<CustomerController> logger) {
         this.db = db;
         this.directoryEntryService = directoryEntryService;
         this.logger = logger;
